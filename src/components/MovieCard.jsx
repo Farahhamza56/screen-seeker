@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useWatchlist } from "../context/WatchlistContext";
+
 
 function MovieCard({ show }) {
   const poster =
@@ -11,12 +13,28 @@ function MovieCard({ show }) {
 
   const rating = show.rating?.average ?? "N/A";
 
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
+  const saved = isInWatchlist(show.id);
+
+  const handleWatchlistClick = (e) => {
+    e.preventDefault();
+    saved ? removeFromWatchlist(show.id) : addToWatchlist(show);
+  };
+
+
+
   return (
     <Link to={`/details/${show.id}`} className="movie-card">
       <img src={poster} alt={show.name} />
       <h3>{show.name}</h3>
       <p>⭐ {rating}</p>
       <p>{genres}</p>
+      <button
+        onClick={handleWatchlistClick}
+        className={`watchlist-btn ${saved ? "saved" : ""}`}
+      >
+        {saved ? "✓ Saved" : "+ Watchlist"}
+      </button>
     </Link>
   );
 }
