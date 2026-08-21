@@ -1,7 +1,7 @@
 import { NavLink, Link } from "react-router-dom";
 import { useWatchlist } from "../context/WatchlistContext";
 
-function Navbar() {
+function Navbar({ theme, toggleTheme }) {
   const { watchlist } = useWatchlist();
 
   return (
@@ -51,6 +51,14 @@ function Navbar() {
               <span className="nav-badge">{watchlist.length}</span>
             )}
           </NavLink>
+
+          <button
+            className="nav-link theme-toggle-btn"
+            onClick={toggleTheme}
+            aria-label="Toggle dark/light mode"
+          >
+            <span>{theme === "dark" ? "☀️" : "🌙"}</span>
+          </button>
         </div>
       </nav>
     </header>

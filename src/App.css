@@ -730,6 +730,19 @@
 }
 
 /* =========================
+   THEME TOGGLE BUTTON
+========================= */
+
+.theme-toggle-btn {
+  border: none;
+  background: transparent;
+}
+
+.theme-toggle-btn > span:first-child {
+  font-size: 1.1rem;
+}
+
+/* =========================
    NAVBAR MOBILE
 ========================= */
 
@@ -1729,4 +1742,21 @@
   .cast-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* =========================
+   LOAD MORE
+========================= */
+
+.load-more-wrapper {
+  display: flex;
+  justify-content: center;
+
+  margin-top: 2.5rem;
+}
+
+.load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import "./App.css";
 
 import { Routes, Route } from "react-router-dom";
@@ -27,10 +28,21 @@ function NotFound() {
 }
 
 function App() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
+
+  useEffect(() => {
+    document.body.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  }
+
   return (
     <WatchlistProvider>
       <div className="app">
-        <Navbar />
+        <Navbar theme={theme} toggleTheme={toggleTheme} />
 
         <main className="main-content">
           <Routes>
