@@ -5,6 +5,7 @@ import MovieCard from "../components/MovieCard";
 
 function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
+
   const initialQuery = searchParams.get("q") || "";
 
   const [query, setQuery] = useState(initialQuery);
@@ -19,7 +20,6 @@ function Search() {
     if (initialQuery) {
       runSearch(initialQuery);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function runSearch(term) {
@@ -29,8 +29,9 @@ function Search() {
       setHasSearched(true);
 
       const data = await searchShows(term);
+
       setShows(data.map((item) => item.show));
-    } catch (err) {
+    } catch {
       setShows([]);
       setError("Something went wrong. Please try again.");
     } finally {
@@ -38,8 +39,8 @@ function Search() {
     }
   }
 
-  function handleSearch(e) {
-    e.preventDefault();
+  function handleSearch(event) {
+    event.preventDefault();
 
     const term = query.trim();
 
@@ -56,25 +57,35 @@ function Search() {
   }
 
   function handleRetry() {
-    if (query.trim()) runSearch(query.trim());
+    if (query.trim()) {
+      runSearch(query.trim());
+    }
   }
 
   const genres = useMemo(() => {
-    const set = new Set();
-    shows.forEach((show) => show.genres?.forEach((g) => set.add(g)));
-    return ["All", ...Array.from(set).sort()];
+    const genreSet = new Set();
+
+    shows.forEach((show) => {
+      show.genres?.forEach((genre) => genreSet.add(genre));
+    });
+
+    return ["All", ...Array.from(genreSet).sort()];
   }, [shows]);
 
   const visibleShows = useMemo(() => {
-    let result = shows;
+    let result = [...shows];
 
     if (genreFilter !== "All") {
-      result = result.filter((show) => show.genres?.includes(genreFilter));
+      result = result.filter((show) =>
+        show.genres?.includes(genreFilter)
+      );
     }
 
     if (sortBy === "rating") {
-      result = [...result].sort(
-        (a, b) => (b.rating?.average ?? 0) - (a.rating?.average ?? 0)
+      result.sort(
+        (a, b) =>
+          (b.rating?.average ?? 0) -
+          (a.rating?.average ?? 0)
       );
     }
 
@@ -83,70 +94,160 @@ function Search() {
 
   return (
     <main className="search-page">
-      <h1>Search Shows</h1>
+      <section className="search-header">
+        <div>
+          <p className="page-eyebrow">DISCOVER</p>
+
+          <h1 className="page-title">
+            Find your next favorite show
+          </h1>
+
+          <p className="page-description">
+            Search thousands of shows and discover something worth watching.
+          </p>
+        </div>
+      </section>
 
       <form className="search-form" onSubmit={handleSearch}>
-        <input
-          type="text"
-          placeholder="Search for a show..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <button type="submit">Search</button>
+        <div className="search-input-wrapper">
+          <span className="search-icon">⌕</span>
+
+          <input
+            type="text"
+            placeholder="Search for a show..."
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            aria-label="Search for a show"
+          />
+
+          {query && (
+            <button
+              type="button"
+              className="clear-search"
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          )}
+        </div>
+
+        <button type="submit" className="search-button">
+          Search
+        </button>
       </form>
 
-      {loading && <p className="loading-text">Loading...</p>}
+      {loading && (
+        <div className="search-status">
+          <div className="loading-spinner" />
+          <p>Searching for shows...</p>
+        </div>
+      )}
 
       {error && (
         <div className="error-box">
           <p>{error}</p>
-          <button onClick={handleRetry}>Try Again</button>
+
+          <button onClick={handleRetry}>
+            Try Again
+          </button>
         </div>
       )}
 
       {!loading && !error && hasSearched && shows.length === 0 && (
-        <p className="no-results">
-          No titles found matching your search
-        </p>
+        <div className="search-empty">
+          <div className="empty-search-icon">⌕</div>
+
+          <h2>No shows found</h2>
+
+          <p>
+            We couldn't find anything matching "{query}".
+            Try searching for another title.
+          </p>
+        </div>
       )}
 
       {!loading && !error && shows.length > 0 && (
-        <div className="search-controls">
-          <div className="filter-group">
-            <label htmlFor="genre-filter">Genre</label>
-            <select
-              id="genre-filter"
-              value={genreFilter}
-              onChange={(e) => setGenreFilter(e.target.value)}
-            >
-              {genres.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
+        <>
+          <div className="search-results-header">
+            <div>
+              <p className="results-label">SEARCH RESULTS</p>
+
+              <h2>
+                {visibleShows.length}{" "}
+                {visibleShows.length === 1 ? "show" : "shows"}
+              </h2>
+            </div>
+
+            <div className="search-controls">
+              <div className="filter-group">
+                <label htmlFor="genre-filter">
+                  Genre
+                </label>
+
+                <div className="select-wrapper">
+                  <select
+                    id="genre-filter"
+                    value={genreFilter}
+                    onChange={(event) =>
+                      setGenreFilter(event.target.value)
+                    }
+                  >
+                    {genres.map((genre) => (
+                      <option key={genre} value={genre}>
+                        {genre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="filter-group">
+                <label htmlFor="sort-by">
+                  Sort by
+                </label>
+
+                <div className="select-wrapper">
+                  <select
+                    id="sort-by"
+                    value={sortBy}
+                    onChange={(event) =>
+                      setSortBy(event.target.value)
+                    }
+                  >
+                    <option value="relevance">
+                      Relevance
+                    </option>
+
+                    <option value="rating">
+                      Rating: High to Low
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {visibleShows.length > 0 ? (
+            <div className="movies-grid">
+              {visibleShows.map((show) => (
+                <MovieCard
+                  key={show.id}
+                  show={show}
+                />
               ))}
-            </select>
-          </div>
+            </div>
+          ) : (
+            <div className="search-empty compact">
+              <h2>No shows match this filter</h2>
 
-          <div className="filter-group">
-            <label htmlFor="sort-by">Sort by</label>
-            <select
-              id="sort-by"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="relevance">Relevance</option>
-              <option value="rating">Rating (High to Low)</option>
-            </select>
-          </div>
-        </div>
-      )}
-
-      {!loading && visibleShows.length > 0 && (
-        <div className="movies-grid">
-          {visibleShows.map((show) => (
-            <MovieCard key={show.id} show={show} />
-          ))}
-        </div>
+              <p>
+                Try selecting another genre or changing the
+                sorting options.
+              </p>
+            </div>
+          )}
+        </>
       )}
     </main>
   );

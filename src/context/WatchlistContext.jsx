@@ -1,44 +1,78 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
-const WatchlistContext = createContext();
+const WatchlistContext = createContext(null);
 
 export function WatchlistProvider({ children }) {
+  const [watchlist, setWatchlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem("watchlist");
 
-    const [watchlist, setWatchlist] = useState(() => {
-    const saved = localStorage.getItem("watchlist");
-    return saved ? JSON.parse(saved) : [];
+      if (!saved) {
+        return [];
+      }
+
+      const parsed = JSON.parse(saved);
+
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   });
 
-    useEffect(() => {
-    localStorage.setItem("watchlist", JSON.stringify(watchlist));
+  useEffect(() => {
+    try {
+      localStorage.setItem("watchlist", JSON.stringify(watchlist));
+    } catch {
+      // Ignore storage errors.
+    }
   }, [watchlist]);
 
-  const addToWatchlist = (show) => {
-    const alreadyExists = watchlist.some((s) => s.id === show.id);
-    if (!alreadyExists) {
-      setWatchlist((prev) => [...prev, show]);
-    }
-  };
+  function addToWatchlist(show) {
+    setWatchlist((current) => {
+      const alreadyExists = current.some(
+        (savedShow) => savedShow.id === show.id
+      );
 
-  const removeFromWatchlist = (showId) => {
-    setWatchlist((prev) => prev.filter((s) => s.id !== showId));
-  };
+      if (alreadyExists) {
+        return current;
+      }
 
+      return [...current, show];
+    });
+  }
 
-  const isInWatchlist = (showId) => {
-    return watchlist.some((s) => s.id === showId);
-  };
+  function removeFromWatchlist(showId) {
+    setWatchlist((current) =>
+      current.filter((show) => show.id !== showId)
+    );
+  }
+
+  function isInWatchlist(showId) {
+    return watchlist.some((show) => show.id === showId);
+  }
 
   return (
     <WatchlistContext.Provider
-      value={{ watchlist, addToWatchlist, removeFromWatchlist, isInWatchlist }}
+      value={{
+        watchlist,
+        addToWatchlist,
+        removeFromWatchlist,
+        isInWatchlist,
+      }}
     >
       {children}
     </WatchlistContext.Provider>
   );
 }
 
-
 export function useWatchlist() {
-  return useContext(WatchlistContext);
+  const context = useContext(WatchlistContext);
+
+  if (!context) {
+    throw new Error(
+      "useWatchlist must be used inside a WatchlistProvider"
+    );
+  }
+
+  return context;
 }
